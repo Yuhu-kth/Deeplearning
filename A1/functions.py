@@ -11,7 +11,7 @@ def softmax(x):
 
 def LoadBatch(filename):
 	""" Copied from the dataset website """
-	with open('/Users/yuhu/Desktop/p4-deepLearning/A1/cifar-10-batches-py/'+filename, 'rb') as fo:
+	with open('/Users/yuhu/Desktop/p4-deepLearning/Deeplearning/A1/cifar-10-batches-py/'+filename, 'rb') as fo:
 		dict = pickle.load(fo, encoding='bytes')
 	print("test",type(dict))
 	data = dict[b'data']
@@ -90,7 +90,8 @@ def montage(W):
 	plt.show()
 
 def ComputeCost(X, Y, W, b, lamda):
-	return output
+	# return output
+	pass
 
 def Data():
 	filename = ["data_batch_1","data_batch_2","data_batch_3"]
