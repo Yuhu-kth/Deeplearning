@@ -97,33 +97,13 @@ def ComputeGradsNumSlow(X, Y, P, W, b, lamda, h):
 
 def ComputeGradients(X, Y, W, b, lamda, svm=False):
     if not svm:
+        #forward pass
         P = EvaluateClassifier(X, W, b)
+        #backward pass
         G = P-Y
         assert (X.shape[1] == G.shape[1])
         grad_W = np.dot(G, X.T)/X.shape[1]+2*lamda*W
         grad_b = np.dot(G, np.ones((X.shape[1], 1)))/X.shape[1]
-        return [grad_W, grad_b]
-    else:
-        K = Y.shape[0]
-        n = X.shape[1]
-        d = X.shape[0]
-        grad_W = np.zeros((K, d))
-        grad_b = np.zeros((K, 1))
-
-        for i in range(n):
-            x = X[:, i]
-            y = np.where(Y[:, i].T[0] == 1)[0][0]
-            s = np.dot(W, X[:, i]) + b
-            for j in range(K):
-                if j != y:
-                    if max(0, s[j]-s[y] + 1) != 0:
-                        grad_W[j] += x
-                        grad_W[y] -= x
-                        grad_b[j, 0] += 1
-                        grad_b[y, 0] -= 1
-        grad_W /= n
-        grad_W += lamda * W
-        grad_b /= n
         return [grad_W, grad_b]
 
 
@@ -144,14 +124,8 @@ def montage(W):
 def ComputeCost(X, Y, W, b, lamda):
     # return output: sum of the loss
     r = lamda*np.sum(W**2)
-    j_sum = 0
-    for i in range(X.shape[1]):
-        x = np.zeros((X.shape[0], 1))
-        y = np.zeros((Y.shape[0], 1))
-        x = X[:, [i]]
-        y = Y[:, [i]]
-        j_sum += -np.log(np.dot(y.T, EvaluateClassifier(x, W, b)))[0]
-    j_sum /= X.shape[1]
+    P = EvaluateClassifier(X,W,b)
+    j_sum = np.sum(-np.log(np.sum(Y * P, axis=0))) / X.shape[1]
     j_sum = j_sum+r
     return j_sum
 
@@ -237,6 +211,8 @@ if __name__ == "__main__":
     GDparams = [n_batch, eta, n_epochs]
     trainX, trainy, valX, valy, testX, testY = loadData()
     trainY = np.eye(10, dtype=int)[trainy].T
+    valY = np.eye(10, dtype=int)[valy].T
+
     W, b = Initialwb(trainX, trainY)
     # trainX_batch, trainY_batch = smallbatches(trainX.T, trainY, n_batch)
     # trainX_batch = trainX_batch.T
@@ -251,7 +227,8 @@ if __name__ == "__main__":
     # errorW = np.abs(gaw-gnw)/(np.abs(gaw)+np.abs(gnw))
     # print(np.max(errorW))
 
-    
+    train_cost = []
+    val_cost = []
     iterator = tqdm.tqdm(range(n_epochs))
     for epoch in iterator:
         #shuffle
@@ -268,5 +245,14 @@ if __name__ == "__main__":
                 "Epoch: {} |Training acc: {:.1f}% | Validation acc: {:.1f}%".format(epoch, train_acc, val_acc))
         
         #plot 
+        train_cost.append(ComputeCost(trainX, trainY, W, b,lamda))
+        val_cost.append(ComputeCost(valX, valY, W, b,lamda))
+    plt.plot(train_cost,color = 'r',label = "train cost")
+    plt.plot(val_cost,color = 'r',label = "val cost")
+    plt.savefig("train_loss.png")
+    plt.savefig("val_loss.png")
+
+    
+
         
 
